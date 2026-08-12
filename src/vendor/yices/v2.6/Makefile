@@ -38,6 +38,10 @@ LIBGMPA=$(LIBDIRGMP)/libgmp.a
 BUILD_ARGS=libyices_install_name=@rpath/libyices.2.dylib LIBS=$(LIBGMPA)
 endif
 
+# yices' install rule runs /sbin/ldconfig by default, which some systems
+# (e.g. NixOS) don't have; prefer whichever ldconfig is on the PATH.
+LDCONFIG ?= $(or $(shell command -v ldconfig 2> /dev/null),/sbin/ldconfig)
+
 .PHONY: all
 all: install
 
@@ -48,7 +52,7 @@ ifeq ($(YICES_STUB),)
 		autoconf ; \
 		$(CONFIGURE_ENV) ./configure --prefix=$(YICES_INST) ; \
 		$(MAKE) $(BUILD_ARGS); \
-		$(MAKE) install \
+		$(MAKE) install LDCONFIG="$(LDCONFIG)" \
 		)
 else
 	(cd stub ; make install)

@@ -30,6 +30,7 @@ import System.Directory
 import System.Environment (getEnvironment, lookupEnv)
 import System.FilePath (takeDirectory, (</>))
 import System.Exit (ExitCode (..))
+import qualified System.Info
 import System.Process
   ( CreateProcess (..),
     callProcess,
@@ -207,14 +208,26 @@ solverSetupHooks = noSetupHooks {configureHooks}
                       -- library alone is enough: the executables that link
                       -- the library inherit its ldOptions, and injecting it
                       -- per component instead passes each -rpath twice.
+                      --
+                      -- Installed copies (src/Makefile puts them in
+                      -- $PREFIX/bin, and the solvers in $PREFIX/lib/SAT)
+                      -- also get the same rpath relative to their own
+                      -- location that src/comp/Makefile uses, so an
+                      -- installation can be moved as a whole.
                       ldOptions =
                         [ "-Wl,-rpath," <> dir
                           | isMainLib inputs.component,
-                            dir <- dirs
+                            dir <- dirs ++ [installedSolverDir]
                         ]
                     }
                 )
           }
+
+-- | Where an installed executable finds the solvers, relative to itself.
+installedSolverDir :: FilePath
+installedSolverDir
+  | System.Info.os == "darwin" = "@loader_path/../lib/SAT"
+  | otherwise = "$ORIGIN/../lib/SAT"
 
 -- | Build the vendored solvers and return the directories holding them.
 --
