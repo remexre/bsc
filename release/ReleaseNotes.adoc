@@ -4,6 +4,29 @@ Bluespec Compiler (BSC) Release Notes
 :last-update-label!:
 :nofooter:
 
+Next Release (in progress)
+--------------------------
+
+Changes since release 2026.07.1:
+
+Toolchain
+~~~~~~~~~
+
+* The Haskell tools are now built with Cabal (GitHub PR#1084)
+  ** Building requires `cabal-install` 3.14 or newer; the Haskell
+     library dependencies no longer need to be installed manually
+  ** The executables in `inst/bin` are no longer wrapper scripts;
+     they find the SMT solver libraries in `inst/lib/SAT` through an
+     rpath (GitHub Issue#10, Issue#163, Issue#404)
+  ** The executables locate the installation relative to their own
+     path (or via `BLUESPECDIR`, as before)
+  ** Editor integration via the Haskell Language Server now works
+     from the root of the repository with no extra setup
+  ** The testsuite can be run via `cabal test` (see the testsuite
+     README)
+
+'''
+
 2026.07.1 Release
 -----------------
 
