@@ -109,6 +109,7 @@
 
           prePatch = ''
             # Flakes don't include submodules, so we copy in yices.
+            rmdir src/vendor/yices/v2.6/yices2
             cp -r --preserve=timestamps --reflink=auto -- \
               "${yices2}" src/vendor/yices/v2.6/yices2
             chmod -R u+w -- src/vendor/yices/v2.6/yices2
