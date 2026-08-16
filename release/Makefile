@@ -23,13 +23,10 @@ NOASCIIDOCTOR ?= 0
 LICDIR = ../LICENSES
 
 LICFILES = $(addprefix $(LICDIR)/, \
+	LICENSE.cvc5 \
 	LICENSE.ghc \
 	LICENSE.hbc \
 	LICENSE.parsec \
-	LICENSE.stp \
-	LICENSE.stp_components \
-	LICENSE.yices \
-	LICENSE.yices-painless \
 	)
 
 INSTALLFILES = ReleaseNotes.adoc

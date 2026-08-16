@@ -3,29 +3,12 @@ under the BSD-3-Clause license, as indicated at the end of this file.
 Individual files or directories may specify their own copyright and
 license.  The following are known to have other authors and licenses:
 
-* STP - Constraint solver
-  * The files in src/vendor/stp/src/ are adapted from a snapshot of STP
-  * See LICENSES/LICENSE.stp and LICENSES/LICENSE.stp_components
-  * The source and license were obtained from the SVN repository [1]
-    at revision 1643 on 2012-04-18.  A patch at [2] obtained on
-    2014-04-21 was also applied.
-      [1] https://stp-fast-prover.svn.sourceforge.net/svnroot/stp-fast-prover/trunk/stp
-      [2] https://github.com/stp/stp/commit/ece1a55fb367bd905078baca38476e35b4df06c3
-
-* The Yices SMT Solver
-  * The files in src/vendor/yices/ define a Haskell interface for using
-    the Yices library (via its C API); there is also code for a
-    stub library, if the real Yices library is not available
-  * See LICENSES/LICENSE.yices
-  * The license was obtained on 2020-01-31 from:
-    https://github.com/SRI-CSL/yices2
-
-* yices-painless - Haskell package
-  * The foreign function declarations in src/vendor/yices/v2.6/HaskellIfc/
-    are adapted from Don Stewart's yices-painless package
-  * See LICENSES/LICENSE.yices-painless
-  * The source and license where obtained on 2012-01-27 from:
-    http://hackage.haskell.org/package/yices-painless
+* cvc5 - SMT solver
+  * BSC tools link against the cvc5 library (via its C API); the
+    library is not vendored in this repository, but any binary
+    distribution will need to include its license information
+  * See LICENSES/LICENSE.cvc5
+  * https://github.com/cvc5/cvc5
 
 * HBC Libraries
   * Seven files in src/comp/Libs/ (as indicated in their header comments)

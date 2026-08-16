@@ -11,35 +11,15 @@ indicated in the files themselves.  If not otherwise specified, they
 are copyright Bluespec Inc and licensed under the BSD-3-Clause
 license, as indicated at the end of this file.
 
-The library objects in the SAT directory, for STP and Yices, are
-licensed and copyright as follows:
-
-* STP - Constraint solver
-  * The library is built from an adapted snapshot of STP
-  * See LICENSES/LICENSE.stp and LICENSES/LICENSE.stp_components
-
-* The Yices SMT Solver
-  * The library is built from the Yices GitHub repository
-  * See LICENSES/LICENSE.yices
-
 The executable binaries in the bin directory (bsc, bluetcl, etc) are
 built from source code partially copyright Bluespec Inc and licensed
 under the BSD-3-Clause license, as indicated at the end of this file.
 They are also built with the following code or APIs with their own
 copyright and licensing:
 
-* STP - Constraint solver
+* cvc5 - SMT solver
   * BSC tools are linked with the library
-  * See LICENSES/LICENSE.stp
-
-* The Yices SMT Solver
-  * BSC tools are linked with the library
-  * See LICENSES/LICENSE.yices
-
-* yices-painless - Haskell package
-  * BSC tools use foreign function declarations adapted from
-    Don Stewart's yices-painless package
-  * See LICENSES/LICENSE.yices-painless
+  * See LICENSES/LICENSE.cvc5
 
 * HBC Libraries
   * BSC source includes files adapted from Haskell libraries

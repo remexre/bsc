@@ -90,7 +90,6 @@ Flags {
 	resource = RFoff,
 	rstGate = False,
 	ruleNameCheck = True,
-	satBackend = SAT_Yices,
 	schedConds = True,
 	schedDOT = False,
 	schedQueries = [],

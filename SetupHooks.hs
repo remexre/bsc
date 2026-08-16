@@ -9,8 +9,7 @@ module SetupHooks (setupHooks) where
 
 import Control.Monad (forM_, unless, when)
 import Data.Char (isSpace)
-import Data.Functor (void)
-import Data.List (isPrefixOf, isSuffixOf, sort)
+import Data.List (isPrefixOf, sort)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
 import Distribution.Simple.LocalBuildInfo (hostPlatform)
@@ -18,7 +17,6 @@ import Distribution.Simple.SetupHooks
 import Distribution.System (OS (..))
 import Distribution.Utils.Path
   ( interpretSymbolicPathCWD,
-    makeRelativePathEx,
     makeSymbolicPath,
     moduleNameSymbolicPath,
     (<.>),
@@ -27,15 +25,12 @@ import System.Directory
   ( copyFile,
     createDirectoryIfMissing,
     doesFileExist,
-    makeAbsolute,
   )
 import System.Environment (getEnvironment, lookupEnv)
-import System.FilePath (takeDirectory, (</>))
-import System.Info (os)
+import System.FilePath (takeDirectory)
 import System.Process
   ( CreateProcess (..),
     callCreateProcess,
-    callProcess,
     proc,
     readProcess,
   )
@@ -43,8 +38,6 @@ import System.Process
 setupHooks :: SetupHooks
 setupHooks =
   generatedModulesSetupHooks
-    <> stpSetupHooks
-    <> yicesSetupHooks
     <> tclSetupHooks
 
 isMainLib :: Component -> Bool
@@ -155,90 +148,6 @@ generatedModulesSetupHooks = noSetupHooks {configureHooks, buildHooks}
       env <- (newVars <>) <$> getEnvironment
       callCreateProcess $ cmd {cwd = Just "src/comp", env = Just env}
       copyFile "src/comp/BuildVersion.hs" path
-
--- | Create a static library @out@ from other objects @objs@ and static
--- libraries @libs@.
-makeStaticLib :: OS -> FilePath -> [FilePath] -> [FilePath] -> IO ()
-makeStaticLib Linux out libs objs = do
-  void . readProcess "ar" ["-M"] $
-    unlines
-      ( ["CREATE " <> out]
-          <> (("ADDLIB " <>) <$> libs)
-          <> (("ADDMOD " <>) <$> objs)
-          <> ["SAVE", "END"]
-      )
-makeStaticLib OSX out libs objs = do
-  callProcess "libtool" (["-static", "-o", out] <> libs <> objs)
-makeStaticLib os _ _ _ = ioError (userError ("unsupported OS: " <> show os))
-
--- | The hooks to build STP.
-stpSetupHooks :: SetupHooks
-stpSetupHooks = noSetupHooks {buildHooks}
-  where
-    buildHooks = noBuildHooks {postBuildComponentHook}
-
-    postBuildComponentHook :: Maybe PostBuildComponentHook
-    postBuildComponentHook = Just $ \env -> do
-      let out =
-            Location
-              (componentBuildDir env.localBuildInfo env.targetInfo.targetCLBI)
-              (makeRelativePathEx "libCstp.a")
-      let path = interpretSymbolicPathCWD (location out)
-      let Platform _ os = hostPlatform env.localBuildInfo
-      when (isMainLib (targetComponent env.targetInfo)) $ do
-        needing [path] $ do
-          needing (stpLibs <> stpObjs) $ do
-            callProcess "make" (["-C", stpDir] <> stpLibs <> stpObjs)
-          makeStaticLib
-            os
-            path
-            ((stpDir </>) <$> stpLibs)
-            ((stpDir </>) <$> stpObjs)
-
-    stpDir :: FilePath
-    stpDir = "src/vendor/stp/src"
-    stpLibs :: [FilePath]
-    stpLibs =
-      [ "AST/libast.a",
-        "STPManager/libstpmgr.a",
-        "absrefine_counterexample/libabstractionrefinement.a",
-        "cpp_interface/libcppinterface.a",
-        "extlib-abc/libabc.a",
-        "extlib-constbv/libconstantbv.a",
-        "main/libmain.a",
-        "parser/libparser.a",
-        "printer/libprinter.a",
-        "sat/libminisat.a",
-        "simplifier/libsimplifier.a",
-        "to-sat/libtosat.a"
-      ]
-    stpObjs :: [FilePath]
-    stpObjs = ["c_interface/c_interface.o"]
-
--- | The hooks to build Yices.
-yicesSetupHooks :: SetupHooks
-yicesSetupHooks = noSetupHooks {buildHooks}
-  where
-    buildHooks = noBuildHooks {postBuildComponentHook}
-
-    postBuildComponentHook :: Maybe PostBuildComponentHook
-    postBuildComponentHook = Just $ \env -> do
-      let out =
-            Location
-              (componentBuildDir env.localBuildInfo env.targetInfo.targetCLBI)
-              (makeRelativePathEx "libCyices.a")
-      let path = interpretSymbolicPathCWD (location out)
-      let Platform _ os = hostPlatform env.localBuildInfo
-      when (isMainLib (targetComponent env.targetInfo)) $ do
-        needing [path] $ do
-          needing [yicesLib] $ do
-            callProcess "make" ["-C", yicesDir, "LDCONFIG=ldconfig"]
-          copyFile yicesLib path
-
-    yicesDir :: FilePath
-    yicesDir = "src/vendor/yices/v2.6"
-    yicesLib :: FilePath
-    yicesLib = "src/vendor/yices/v2.6/yices2-inst/lib/libyices.a"
 
 -- | The hooks to link to Tcl.
 tclSetupHooks :: SetupHooks

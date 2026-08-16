@@ -1,7 +1,7 @@
 module Flags(
              Flags(..),
              redSteps,
-             ResourceFlag(..), SATFlag(..), MsgListFlag(..),
+             ResourceFlag(..), MsgListFlag(..),
 
              DumpFlag(..),
              hasDump, hasDumpStrict, dumpInfo,
@@ -111,7 +111,6 @@ data Flags = Flags {
         resource :: ResourceFlag,
         rstGate :: Bool,
         ruleNameCheck :: Bool,
-        satBackend :: SATFlag,
         schedConds:: Bool,
         schedDOT :: Bool,
         schedQueries :: [(String,String)],
@@ -296,11 +295,6 @@ data DumpFlag
 data ResourceFlag
        = RFoff    -- don't reschedule: fail if not enough resources
        | RFsimple -- reschedule: arbitrate resources (drop first edge in graph)
-       deriving (Eq, Show)
-
-data SATFlag
-       = SAT_Yices
-       | SAT_STP
        deriving (Eq, Show)
 
 data MsgListFlag = AllMsgs | SomeMsgs [String]

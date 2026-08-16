@@ -52,8 +52,6 @@ Compiler flags:
 -reset-prefix name      reset name or prefix for generated modules
 -resource-off           fail on insufficient resources
 -resource-simple        reschedule on insufficient resources
--sat-stp                use STP SMT for disjoint testing and SAT
--sat-yices              use Yices SMT for disjoint testing and SAT
 -sched-dot              generate .dot files with schedule information
 -show-compiles          show recompilations
 -show-elab-progress     display trace as modules, rules, methods are elaborated

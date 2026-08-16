@@ -48,9 +48,7 @@ library
     FlexibleContexts,
     FlexibleInstances,
     TypeSynonymInstances,
-  extra-bundled-libraries:
-    Cstp,
-    Cyices,
+  extra-libraries: cvc5
   if os(osx)
     extra-libraries: c++
   else
@@ -61,10 +59,13 @@ library
     src/comp,
     src/comp/GHC/posix,
     src/comp/Libs,
+    src/vendor/cvc5/HaskellIfc,
     src/vendor/htcl,
-    src/vendor/stp/HaskellIfc,
-    src/vendor/yices/v2.6/HaskellIfc,
-  c-sources: src/vendor/htcl/haskell.c
+  c-sources:
+    src/vendor/cvc5/bsc_cvc5.c,
+    src/vendor/htcl/haskell.c,
+  -- the cvc5 headers come from the system/Nix-provided cvc5 installation
+  include-dirs: src/vendor/cvc5
   exposed-modules:
     AAddSchedAssumps
     AAddScheduleDefs
@@ -78,9 +79,8 @@ library
     ADumpSchedule
     ADumpScheduleInfo
     AExpand
-    AExpr2STP
+    AExpr2CVC5
     AExpr2Util
-    AExpr2Yices
     ANoInline
     AOpt
     APaths
@@ -116,6 +116,8 @@ library
     BuildVersion
     CCSyntax
     CFreeVars
+    CVC5
+    CVC5FFI
     CPPLineDirectives
     CSubst
     CSyntax
@@ -234,8 +236,7 @@ library
     PreIds
     PreStrings
     Pred
-    Pred2STP
-    Pred2Yices
+    Pred2CVC5
     PredTrie
     Pretty
     Prim
@@ -247,8 +248,6 @@ library
     SATPred
     SCC
     SEMonad
-    STP
-    STPFFI
     SchedInfo
     Scheme
     SignalNaming
@@ -303,8 +302,6 @@ library
     Verilog
     Version
     Wires
-    Yices
-    YicesFFI
 
 common common_exes
   build-depends:

@@ -156,7 +156,6 @@ import ANoInline (aNoInline)
 import AAddSchedAssumps(aAddSchedAssumps,aAddCFConditionWires)
 import ARemoveAssumps(aRemoveAssumps)
 import ADropUndet(aDropUndet)
-import SAT(checkSATFlags)
 import InlineWires(aInlineWires)
 import InlineCReg(aInlineCReg)
 import LambdaCalc(convAPackageToLambdaCalc)
@@ -232,19 +231,17 @@ main' :: ErrorHandle -> Flags -> String -> IO ()
 main' errh flags name =  do
     tStart <- getNow
 
-    flags' <- checkSATFlags errh flags
-
     -- check system requirements
     doSystemCheck errh
 
-    let comp = if updCheck flags'
+    let comp = if updCheck flags
                then compile_with_deps
                else compile_no_deps
 
-    success <- comp errh flags' name
+    success <- comp errh flags name
 
     -- final verbose message
-    _ <- timestampStr flags' "total" tStart
+    _ <- timestampStr flags "total" tStart
 
     if success then
       return ()

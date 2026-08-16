@@ -7,7 +7,7 @@
       in
       {
         default = pkgs.mkShell {
-          # Compiler, vendored-solver and Tcl deps all come from the package.
+          # Compiler, SMT solver (cvc5) and Tcl deps all come from the package.
           inputsFrom = [ self.packages.${system}.default ];
           # Dev-only tools: cabal, HLS (matching the package set's GHC), and
           # the testsuite deps.
@@ -16,6 +16,7 @@
             pkgs.cabal-install
             pkgs.dejagnu
             pkgs.iverilog
+            pkgs.m4
           ];
         };
       }
@@ -24,12 +25,6 @@
       system: pkgs:
       let
         hs = pkgs.haskell.packages.ghc967;
-        yices2 = pkgs.fetchFromGitHub {
-          owner = "SRI-CSL";
-          repo = "yices2";
-          rev = "f705557b7d33d866eb1b47b5471f97189eb31cc4";
-          hash = "sha256-qdxh86CkKdm65oHcRgaafTG9GUOoIgTDjeWmRofIpNE=";
-        };
 
       in
       {
@@ -46,16 +41,9 @@
           doCheck = false;
 
           buildTools = [
-            pkgs.autoconf
-            pkgs.bison
-            pkgs.flex
-            pkgs.gperf
             pkgs.perl
             pkgs.tcl
             pkgs.which
-          ]
-          ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-            pkgs.glibc.bin
           ];
 
           setupHaskellDepends = [
@@ -87,6 +75,7 @@
           ];
           libraryPkgconfigDepends = [ pkgs.tcl ];
           librarySystemDepends = [
+            pkgs.cvc5
             pkgs.gmp
             pkgs.zlib
           ];
@@ -107,13 +96,6 @@
             hs.unix
           ];
 
-          prePatch = ''
-            # Flakes don't include submodules, so we copy in yices.
-            rmdir src/vendor/yices/v2.6/yices2
-            cp -r --preserve=timestamps --reflink=auto -- \
-              "${yices2}" src/vendor/yices/v2.6/yices2
-            chmod -R u+w -- src/vendor/yices/v2.6/yices2
-          '';
           postPatch = "patchShebangs .";
 
           preConfigure = "export NOGIT=1";

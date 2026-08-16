@@ -14,7 +14,6 @@ Flags:
     -remove-false-rules
     -reset-prefix   RST_N
     -resource-off
-    -sat-yices
     -show-compiles
     -show-timestamps
     -show-version

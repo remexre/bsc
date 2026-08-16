@@ -48,15 +48,11 @@ BUILDDIR=$(TOP)/build/comp
 # Parsec
 PARSEC_HS = ../Parsec
 
-# STP
-STP_HS = ../vendor/stp/include_hs
-STP_INC_FLAGS = -I../vendor/stp/include
-STP_LIB_FLAGS = -L../vendor/stp/lib -lstp
-
-# Yices
-YICES_HS = ../vendor/yices/include_hs
-YICES_INC_FLAGS = -I../vendor/yices/include
-YICES_LIB_FLAGS = -L../vendor/yices/lib -lyices
+# CVC5 (SMT solver, installed on the system or via Nix)
+CVC5_HS = ../vendor/cvc5/HaskellIfc
+CVC5_SHIM = ../vendor/cvc5/bsc_cvc5.c
+CVC5_INC_FLAGS =
+CVC5_LIB_FLAGS = -lcvc5
 
 # HTCL
 HTCL_HS = ../vendor/htcl
@@ -180,8 +176,7 @@ GHCRTSFLAGS ?= +RTS -M$(GHCMAXHEAP) -A128m -RTS
 GHCINCLUDES =  \
 	-iGHC/posix -iLibs \
 	-i$(PARSEC_HS) \
-	-i$(STP_HS) \
-	-i$(YICES_HS) \
+	-i$(CVC5_HS) \
 	-i$(HTCL_HS)
 GHCTMP = '-tmpdir $(TMPDIR)'
 # Default RTS flags for programs built with a Haskell main:
@@ -212,8 +207,7 @@ GHCFLAGS = \
 # To avoid recompiling the shared modules each time we compile a tool,
 # we provide the -I flags for all tools in every use of GHC.
 GHCFLAGS += \
-	$(STP_INC_FLAGS) \
-	$(YICES_INC_FLAGS) \
+	$(CVC5_INC_FLAGS) \
 	$(HTCL_INC_FLAGS) \
 	$(TCL_INC_FLAGS) \
 
@@ -250,8 +244,7 @@ SOURCES_WO_EXTRA_BUILDVERSION = \
 	Libs/*.hs \
 	GHC/posix/*.hs \
 	$(PARSEC_HS)/*.hs \
-	$(STP_HS)/*.hs \
-	$(YICES_HS)/*.hs \
+	$(CVC5_HS)/*.hs \
 	$(HTCL_HS)/*.hs
 
 SOURCES = BuildVersion.hs BuildSystem.hs $(SOURCES_WO_EXTRA_BUILDVERSION)
@@ -287,8 +280,8 @@ POSTBUILDCOMMAND = $(BUILDDONE)
 # (to avoid creating binaries with unnecessary library requirements)
 #
 BSC_BUILDLIBS = \
-	$(STP_LIB_FLAGS) \
-	$(YICES_LIB_FLAGS) \
+	$(CVC5_SHIM) \
+	$(CVC5_LIB_FLAGS) \
 
 BLUETCL_BUILDLIBS = \
 	$(BSC_BUILDLIBS) \
@@ -445,7 +438,7 @@ install-showrules: $(PKGINFO)
 # Other targets
 
 tags:   *hs */*hs bluewish.hs
-	$(FIND) . $(PARSEC_HS) $(STP_HS) $(YICES_HS) $(HTCL_HS) \
+	$(FIND) . $(PARSEC_HS) $(CVC5_HS) $(HTCL_HS) \
 		-type f -name \*hs | xargs hasktags
 	mv tags tags.tmpfile
 	sort tags.tmpfile > tags

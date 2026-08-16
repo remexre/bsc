@@ -611,7 +611,6 @@ defaultFlags bluespecdir = Flags {
         resource = RFoff,
         rstGate = False,
         ruleNameCheck = True,
-        satBackend = SAT_Yices,
         schedConds = True,
         schedDOT = False,
         schedQueries = [],
@@ -1076,8 +1075,6 @@ flagsTable = [(s,ft) | (s,(ft,_,_)) <- externalFlags]
 showIfTrue :: (Flags -> Bool) -> Maybe (Flags -> (Bool,Bool))
 showIfTrue fn = Just (\flags -> (fn flags,False))
 
-showIfEq :: (Eq a) => (Flags -> a) -> a -> Maybe (Flags -> Bool)
-showIfEq fn v = Just (\flags -> fn flags == v)
 
 showPath :: (Flags -> [String]) -> Maybe ArgReturnType
 showPath path_fn =
@@ -1537,16 +1534,6 @@ externalFlags = [
          (Arg "dir" (\f s -> Left (f {cdir = Just s})) (Just (FRTMaybeString cdir)),
           "output directory for Bluesim intermediate files", Visible)),
 
-        ("sat-stp",
-         (NoArg (\f -> Left $ f { satBackend = SAT_STP })
-                (showIfEq satBackend SAT_STP),
-          "use STP SMT for disjoint testing and SAT", Visible)),
-
-        ("sat-yices",
-         (NoArg (\f -> Left $ f { satBackend = SAT_Yices })
-                (showIfEq satBackend SAT_Yices),
-          "use Yices SMT for disjoint testing and SAT", Visible)),
-
         ("steps",
          (Arg "n"
              (\f s -> case (mread s) of
@@ -1912,7 +1899,6 @@ showFlagsRaw flags =
           ("resource", show (resource flags)),
           ("rstGate", show (rstGate flags)),
           ("ruleNameCheck", show (ruleNameCheck flags)),
-          ("satBackend", show (satBackend flags)),
           ("schedConds", show (schedConds flags)),
           ("schedDOT", show (schedDOT flags)),
           ("schedQueries", show (schedQueries flags)),

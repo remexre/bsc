@@ -1568,8 +1568,8 @@ getOp _ e = [e]
 -- retain any useful state between defs.
 -- Note also that this optimization does not descend into defs.
 -- XXX Both of these decisions were made because of the performance of
--- XXX CUDD as the solver.  With Yices, we may be able to maintain state
--- XXX across defs and to follow non-inlined defs.
+-- XXX CUDD as the solver.  With an SMT solver, we may be able to maintain
+-- XXX state across defs and to follow non-inlined defs.
 
 type SIO a = StateT SATState IO a
 

@@ -63,16 +63,15 @@ To build a complete release of BSC, you will need:
  - The GNU Multiple Precision Arithmetic Library (GMP). `libgmp` is
    used to implement integers in Haskell and may already be a
    dependency of installing GHC.
+ - The [cvc5] SMT solver (version 1.x), with its C API library
+   (`libcvc5`) and headers. BSC links against it at build time.
+   See "SMT solver" below for how to install it.
  - `pkg-config` is strongly recommended to query installed
    libraries. The build will fall back to default values if necessary,
    but this should be avoided if possible.
  - Standard unix shell and development tools, notably GNU Make.
 
 The following dependencies are optional, though recommended:
- - To build the Yices SMT solver: a C/C++ toolchain, `autoconf` and
-   the `gperf` perfect hashing library.
- - To build the STP SMT solver: a C/C++ toolchain, Perl, and the
-   `flex` and `bison` parser generator tools.
  - To build the Bluespec Tcl shell (`bluetcl`): Tcl development
    libraries (version 9.0, 8.6, or 8.5).
  - To run smoke tests: the [Icarus Verilog] simulator.
@@ -86,6 +85,7 @@ The following dependencies are optional, though recommended:
 [CI workflow]: .github/workflows/ci.yml
 [GHC]: https://www.haskell.org/ghc/
 [GHCUp]: https://www.haskell.org/ghcup/
+[cvc5]: https://cvc5.github.io/
 [Icarus Verilog]: https://steveicarus.github.io/iverilog/
 [Asciidoctor]: https://asciidoctor.org
 
@@ -99,10 +99,6 @@ sudo apt-get install \
    tcl-dev \
    libgmp-dev \
    pkg-config \
-   autoconf \
-   gperf \
-   flex \
-   bison \
    iverilog \
    texlive-latex-base \
    texlive-latex-recommended \
@@ -163,7 +159,6 @@ sudo dnf install \
    dejagnu \
    tcl-devel \
    gmp-devel \
-   gperf \
    latex \
    texlive-boxedminipage \
    texlive-dingbat \
@@ -243,9 +238,7 @@ required and optional dependencies:
 ```bash
 brew update
 brew install \
-   autoconf \
    gmp \
-   gperf \
    icarus-verilog \
    pkg-config \
    deja-gnu \
@@ -319,43 +312,32 @@ make GHC="ghc -package-env default"
 To build a version of BSC that supports profiling, be aware that
 profiling versions of the libraries need to be installed.
 
-### SMT solvers
+### SMT solver
 
-The repository for the [Yices SMT Solver] is cloned as a submodule of
-this repository. Building the BSC tools will recurse into this
-directory and build the Yices library for linking into BSC and
-Bluetcl.
+BSC uses the [cvc5] SMT solver, linked in via its C API (`libcvc5`).
+Unlike earlier versions of BSC, which built the STP and Yices solvers
+from vendored source code, cvc5 is expected to be installed on the
+system:
 
-[Yices SMT Solver]: https://github.com/SRI-CSL/yices2
+ * The easiest option is to use the Nix flake provided by this
+   repository (see "Building with Nix" below), which supplies a
+   matching cvc5 automatically.
+ * Otherwise, install cvc5 (version 1.x) yourself, either from a
+   package manager that provides it, from the prebuilt binaries on
+   the [cvc5 releases page], or by building it from
+   [source](https://github.com/cvc5/cvc5).  Make sure that the C
+   headers (`cvc5/c/cvc5.h`) and the shared library (`libcvc5`) are
+   installed in locations visible to the compiler and linker
+   (possibly via `C_INCLUDE_PATH` and `LIBRARY_PATH`).
 
-Building the BSC tools will also recurse into a directory for the STP
-SMT solver. This is currently an old snapshot of the STP source code,
-including the code for various libraries that it uses. In the future,
-this may be replaced with a submodule instantiation of the repository
-for the [STP SMT solver]. When that happens, additional requirements
-from that repository will be added.
-
-[STP SMT solver]: https://github.com/stp/stp
-
-Both the Yices and STP solvers are optional to build, although
-recommended. To skip these builds, see "Optionally avoiding the
-compile of STP or Yices" below.
+[cvc5 releases page]: https://github.com/cvc5/cvc5/releases
 
 ## Clone the repository
 
 Clone this repository by running:
 
 ```bash
-git clone --recursive https://github.com/B-Lang-org/bsc
-```
-
-That will clone this repository and all of the submodules that it depends on.
-If you have cloned the repository without the `--recursive` flag, you can setup
-the submodules later with a separate command:
-
-```bash
 git clone https://github.com/B-Lang-org/bsc
-git submodule update --init --recursive
 ```
 
 ## Build the BSC toolchain
@@ -365,6 +347,27 @@ At the root of the repository:
 ```bash
 make install-src
 ```
+
+### Building with Nix
+
+If you have [Nix] installed (with flakes enabled), you can instead
+build the toolchain with:
+
+```bash
+nix build
+```
+
+This uses the `flake.nix` in this repository, which provides the GHC
+toolchain, Tcl, and the cvc5 SMT solver automatically -- you do not
+need to install any of the dependencies listed above yourself.  The
+result is symlinked to `result/`.  To get a development shell with
+all dependencies (plus the tools for running the test suite):
+
+```bash
+nix develop
+```
+
+[Nix]: https://nixos.org/
 
 This will create a directory called `inst` containing an installation of the
 compiler toolchain. This `inst` directory can later be moved to another
@@ -395,41 +398,6 @@ compile in parallel, define `GHCJOBS` in the environment to that number:
 ```bash
 make GHCJOBS=4
 ```
-
-### Optionally avoiding the compile of STP or Yices
-
-The BSC tools need an SMT solver. By default, the build process
-compiles both the Yices and STP solvers, and allows the end user to
-select which one to use at runtime, with Yices being the default.
-
-Most users will never need to switch solvers, or even be aware of the
-option. Thus, the build process offers the option of not compiling one
-of the two solvers.
-
-Currently, the BSC executable expects to dynamically link with
-object files for Yices and STP found in the directory `inst/lib/SAT/`.
-BSC calls a function in the library to query its version; if the version
-does not match what BSC expects, BSC will not let users select that solvers.
-Thus, the current way to omit a solver is to replace the object file
-with a stub that returns a null version.  In the future, we may replace
-this with static linking and the processing for removing a solver 
-would then simply omit the code for that solver.
-
-To skip building the STP solver, assign a non-empty value to
-`STP_STUB`:
-
-```bash
-make STP_STUB=1
-```
-
-Similarly, use `YICES_STUB` to skip building the Yices solver:
-
-```bash
-make YICES_STUB=1
-```
-
-The BSC tools do need at least one SMT solver, so only one of these
-options should be used.
 
 ## Test the BSC toolchain
 

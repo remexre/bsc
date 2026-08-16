@@ -52,7 +52,8 @@ The following is a running list of those writings.
 
 * See [INSTALL.md](./INSTALL.md) for info on building and installing
 * TBD: Any info on tools, dependencies, and compiling options
-  * e.g. individual SMT libraries can be omitted using `STP_STUB=1` or `YICES_STUB=1`
+  * The SMT solver (cvc5) is an external dependency; it is not built
+    from this repository.  The Nix flake provides it automatically.
 
 ### Testing
 
