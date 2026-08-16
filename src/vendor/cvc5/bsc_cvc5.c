@@ -307,18 +307,34 @@ static uint32_t bv_size(Cvc5Term t) {
   return cvc5_sort_bv_get_size(cvc5_term_get_sort(t));
 }
 
+/* Build the shift amount for a static shift of a "width"-bit vector.
+
+   The amount has to be a bit-vector of the same width as the value being
+   shifted, but cvc5_mk_bv_uint64 silently truncates the value modulo
+   2^width: an amount of 17 on a 4-bit vector would become a shift by 1,
+   rather than shifting everything out.  Clamping to "width" first avoids
+   that, because a shift by "width" or more is already zero/sign fill.
+   (Clamping to "width" is safe even when "width" itself is not
+   representable, as for width 1: 1 truncates to 1, which still shifts
+   the whole vector out.) */
+static Cvc5Term mk_shift_amount(BscCvc5Context* ctx,
+                                uint32_t width, uint32_t amount) {
+  if (amount > width) amount = width;
+  return cvc5_mk_bv_uint64(ctx->tm, width, amount);
+}
+
 /* Static shifts: shift by a constant amount.  Note that cvc5 gives a
    total semantics (shifting by the width or more yields zero/arithmetic
    fill), matching STP's vc_bvLeftShiftExpr/vc_bvRightShiftExpr. */
 Cvc5Term bsc_cvc5_mk_bv_shl_const(BscCvc5Context* ctx,
                                   Cvc5Term a, uint32_t amount) {
-  Cvc5Term n = cvc5_mk_bv_uint64(ctx->tm, bv_size(a), amount);
+  Cvc5Term n = mk_shift_amount(ctx, bv_size(a), amount);
   return bsc_cvc5_mk_bv_shl(ctx, a, n);
 }
 
 Cvc5Term bsc_cvc5_mk_bv_lshr_const(BscCvc5Context* ctx,
                                    Cvc5Term a, uint32_t amount) {
-  Cvc5Term n = cvc5_mk_bv_uint64(ctx->tm, bv_size(a), amount);
+  Cvc5Term n = mk_shift_amount(ctx, bv_size(a), amount);
   return bsc_cvc5_mk_bv_lshr(ctx, a, n);
 }
 
