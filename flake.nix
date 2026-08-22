@@ -124,6 +124,29 @@
             main = defaultMainWithSetupHooks setupHooks
             EOF
           '';
+
+          # Assemble the BLUESPECDIR runtime (lib/Libraries, Bluesim, the
+          # Verilog primitives, ...) next to the installed binaries, like
+          # `make install-src` does.  The runtime Makefiles pick the compiler
+          # up from $(PREFIX)/bin, where the Haskell builder just installed
+          # it; NO_DEPS_CHECKS skips src/Makefile's tool probe, which insists
+          # on cabal (the builder drives Setup.hs directly).
+          postInstall = ''
+            make -C src install-runtime PREFIX=$out NO_DEPS_CHECKS=1
+          '';
+
+          # SetupHooks gives everything an rpath to the solver libraries in
+          # the build tree, as well as $ORIGIN/../lib/SAT.  Removing the
+          # build-tree copies lets fixup's rpath shrinking drop those entries,
+          # which would otherwise fail the check for references to /build.
+          # The Haskell shared library doesn't sit next to lib/SAT, so it is
+          # pointed at $out/lib/SAT directly.
+          preFixup = ''
+            rm -r src/vendor/stp/lib src/vendor/yices/lib
+            for so in $out/lib/ghc-*/lib/*/libHSbsc-*.so; do
+              patchelf --add-rpath $out/lib/SAT "$so"
+            done
+          '';
         };
       }
     ) nixpkgs.legacyPackages;

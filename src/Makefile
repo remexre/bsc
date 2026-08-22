@@ -108,22 +108,30 @@ ifneq ($(BSC_BUILD_PKGINFO),)
 			> $(abspath $(PREFIX))/LICENSES/LICENSE.ghc_pkgs
 endif
 
-# The SMT solvers are shared libraries, which the binaries find in
-# $(PREFIX)/lib/SAT through an rpath relative to their own location.
-.PHONY: install-solvers
-install-solvers: cabal-build
-	$(MAKE)  -C vendor/stp   PREFIX=$(PREFIX)  install
-	$(MAKE)  -C vendor/yices PREFIX=$(PREFIX)  install
-
 # -------------------------
-# Everything else (the Bluespec standard library, the Bluesim kernel, the
-# Verilog primitives, ...) is built by the subdirectory Makefiles.
+# Everything else (the SMT solvers' shared libraries, the Bluespec standard
+# library, the Bluesim kernel, the Verilog primitives, ...) is installed by
+# the subdirectory Makefiles.  The binaries find the solvers in
+# $(PREFIX)/lib/SAT through an rpath relative to their own location.
+#
+# 'install-runtime' assembles just these runtime pieces, assuming the
+# binaries are already in $(PREFIX)/bin; the Nix build uses it (with
+# NO_DEPS_CHECKS=1, as cabal is not available there) after the Haskell
+# builder has installed the executables.
 #
 # Order matters: Libraries compiles the standard library with the
-# newly-installed $(PREFIX)/bin/bsc.
+# newly-installed $(PREFIX)/bin/bsc, so 'install' runs install-runtime
+# only once its prerequisites are done, even under make -j.  (And the
+# solvers are only installed after cabal has built them.)
 
 .PHONY: install
-install: install-bin install-solvers install-pkginfo
+install: install-bin install-pkginfo
+	$(MAKE)  PREFIX=$(PREFIX)  install-runtime
+
+.PHONY: install-runtime
+install-runtime:
+	$(MAKE)  -C vendor/stp   PREFIX=$(PREFIX)  install
+	$(MAKE)  -C vendor/yices PREFIX=$(PREFIX)  install
 	$(MAKE)  -C Libraries  PREFIX=$(PREFIX)  install
 	$(MAKE)  -C exec       PREFIX=$(PREFIX)  install
 	$(MAKE)  -C VPI        PREFIX=$(PREFIX)  install
