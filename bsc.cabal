@@ -106,6 +106,7 @@ library
     BinData
     BinParse
     BinUtil
+    Bloogle
     BluesimLoader
     BoolExp
     BoolOpt
