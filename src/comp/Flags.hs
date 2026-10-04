@@ -129,6 +129,7 @@ data Flags = Flags {
         simplifyCSyntax :: Bool,
         strictMethodSched :: Bool,
         suppressWarnings :: MsgListFlag,
+        svaRuntimeChecks :: Bool,
         synthesize :: Bool,
         systemVerilogTasks :: Bool,
         tclShowHidden :: Bool,
